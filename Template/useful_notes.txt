@@ -1,0 +1,81 @@
+- Chiamata a Funzione Assembler:
+    - sample.c, decommentare Commento0 per dichiarazione della firma della funzione assembler
+    -           decommentare Commento0_1 per chiamare la funzione assembler dal main
+    - ASM_funct.s, completare definizione della funzione e gestione area variabili in read only/readwrite (!occhio agli EXPORT!)
+
+- Chiamata a SVC:
+    - sample.c, eliminare Commento1 per chiamata a SVC in assembler
+    - startup_LPC17xx.c, eliminare Commento1_1 nell'Handler_SVC
+
+- Handler/User Mode:
+    - startup_LPC17xx.c, decommentare Commento2 per suddividere lo stack
+    -                    decommentare Commento2_1 per entrare in User Mode (nel reset handler)
+
+- Buttons:
+    - IRQ_button.c, non serve modificarlo se va gestito il debouncing
+    - IRQ_RIT.c, gestisce il debouncing di tutti i buttons
+
+- Timers: 
+    - ( scala del tempo |s, ds "decimi di secondo" -> 1s = 0.1ds, cs "centesimi di secondo" -> 1s = 0.01cs, ms "milli secondo" -> 1s = 0.001ms| )
+    - ( scala del tempo |s, ds "decimo di secondo" -> 0.1s = 1ds, cs "centesimi di secondo" -> 0.01s = 1cs, ms "milli secondo" -> 0.001s = 1ms| ) 
+	- esempio di lampeggio con timer di frequenza 2Hz (!CASO NORMALE!) = ogni {[1/2]*25*(10^6)]s entro nell'handler del timer
+    - esempio di lampeggio con timer di frequenza 5kHz (!CASO LED!) = ogni {[1/(5000*2)]*25*(10^6)]s accendo o spengo il LED
+	- esempio di lampeggio con timer di periodo 50ms (!CASO NORMALE!) = ogni 50ms entro nell'handler (quindi un timer con frequenza 0.050*25milioni)
+    - esempio di lampeggio con timer di periodo 50ms (!CASO LED!) = ogni 25ms spengo o accendo il LED (quindi un timer con frequenza 0.025*25milioni)
+    - system_LPC17xx.c, per accendere il timer 2/3 vado nel wizard e accendo il timer in PCONP
+    - INIZIALIZZAZIONE PARAMETRI TIMER: 
+                init_timer(2, 0, 0, 1, 0x000061A8);   
+                    2 -> timer 2    (0 timer 0, 1 timer 1, ...)
+                    0 -> prescalare (non serve)
+                    0 -> Match Register 0.   (1 Match Register 1, 2 Match Register 2, ...)
+                    1 -> SRI = Interrupt. Quando il timer raggiunge il valore del match register, scatena solo l'interrupt 
+                    0x000186A0 -> valore da assegnare al Match Register 0. 
+                      
+                    SRI(Stop, Reset, Interrupt) values:
+                        0 -> nulla
+                        4 -> stop, ferma il conteggio del timer (enable)
+                        2 -> reset, resetta il valore del timer facendolo ripartire
+                        1 -> interrupt, entra nell'handler del timer (IRQ_timer.c)
+                        
+                        3 -> interrupt e reset
+                        5 -> interrupt e stop
+                        6 -> stop e reset
+                        7 -> stop e reset e interrupt
+
+- Joystick:
+    - IRQ_RIT.c, gestione del joystick
+
+- Priorita' delle periferiche [0...n]
+    - Buttons: lib_button.c, riga 22 -> ([alta]1>2>3>...[bassa])
+    - Timers: lib_timer.c, riga 143 -> (valore di default per ogni timer = 0)
+    - RIT: lib_RIT.c, [forse] NVIC_SetPriority(RIT_IRQn, <valore_priorita'>);
+
+- Definizione maschere per estrarre N bit da una variabile con M bit (M > N) partendo dalla posizione A fino alla posizione B
+    - Trovare il numero massimo rappresentabile su N bit -> Num = (2^N) -1
+    - Shiftare a sinistra il Num di A bit -> Ris = Num << A
+    - Se i bit estratti devono essere posizionati un una variabilie piccola, i bit estratti devono essere shiftati nelle posizioni più basse senno' il risultato verra' troncato
+         - Supponendo di dover insirire il risultato in un char (8 bit) -> Ris >> A
+
+    ESEMPIO: Prendere i bit (8) dal 16 al 23 da TC del timer1 e metterli in una variabile unsigned char
+		- Massimo numero rappresentabile su 8 bit -> 255
+            - Shifto a sinistra di 16 bit -> <<  16
+		- Shifto a destra per inserirlo in un char -> >> 16
+		val = (LPC_TIM1->TC & (255 << 16)) >> 16
+		
+- EXTERN per utilizzare nel C variabili e funzioni definite in ARM
+
+- EINT1 -> KEY1
+- EINT2 -> KEY2
+- EINT3 -> INT0
+
+- LED: LD4 = Led_Out(7), LD5 = Led_Out(6), ....	
+		
+ ---  ARM  ---
+
+- LDRSB = legge dalla memoria 8 bit e ne estende il segno su 32 bit
+
+- LPC_TIM0->TC: si ottiene il valore del contatore associato al timer0 (time counter)
+
+- In RAM lo spazio deve essere definito in BYTE
+		
+- 1byte = 8 bit

@@ -1,0 +1,26 @@
+				;r0 = vett, r1 = nvett
+				
+				mov r6, r0 ;salvo indirizzo vettore che può risultare utile
+				
+				sub r1, r1, #1
+				mov r7, r1
+				;mov r1, #iterations ;se le iterazioni non vengono passate
+L1				MOV r3, r1 
+				MOV r0, r6
+L2				LDR r4, [r0]
+				;LDRB r4, [r0] ;per byte
+                		LDR r5, [r0, #4]
+				;LDRB r5, [r0, #1] ;per byte
+				
+				CMP r4, r5
+				blo skip
+				str r5, [r0]
+				;str r5, [r0] ;per byte
+				str r4, [r0, #4]
+				;str r4, [r0, #1] ;per byte
+				
+skip				add r0, r0, #4
+				subs r3, #1
+				bne L2
+				subs r1, #1
+				bne L1

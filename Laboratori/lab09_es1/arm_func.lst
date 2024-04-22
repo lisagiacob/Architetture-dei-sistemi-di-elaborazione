@@ -1,0 +1,348 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             morse, DATA, READONLY
+    2 00000000         
+    3 00000000         
+    4 00000000 FFFFFF01 
+              FFFF1000 
+              FFFF1010 
+              FFFFF100 
+              FFFFFFF0 
+              FFFF0010 Morse   DCD              0xFFFFFF01, 0xFFFF1000, 0xFFFF1
+010, 0xFFFFF100, 0xFFFFFFF0, 0xFFFF0010
+    5 00000018 FFFFF110 
+              FFFF0000 
+              FFFFFF00 
+              FFFF0111 
+              FFFFF101 
+              FFFF0100         DCD              0xFFFFF110, 0xFFFF0000, 0xFFFFF
+F00, 0xFFFF0111, 0xFFFFF101, 0xFFFF0100
+    6 00000030 FFFFFF11 
+              FFFFFF10 
+              FFFFF111 
+              FFFF0110 
+              FFFF1101 
+              FFFFF010         DCD              0xFFFFFF11, 0xFFFFFF10, 0xFFFFF
+111, 0xFFFF0110, 0xFFFF1101, 0xFFFFF010
+    7 00000048 FFFFF000 
+              FFFFFFF1 
+              FFFFF001 
+              FFFF0001 
+              FFFFF001 
+              FFFF1001         DCD              0xFFFFF000, 0xFFFFFFF1, 0xFFFFF
+001, 0xFFFF0001, 0xFFFFF001, 0xFFFF1001
+    8 00000060 FFFF1011 
+              FFFFF110 
+              FFF01111 
+              FFF00111 
+              FFF00011 
+              FFF00001         DCD              0xFFFF1011, 0xFFFFF110, 0xFFF01
+111, 0xFFF00111, 0xFFF00011, 0xFFF00001
+    9 00000078 FFF00000 
+              FFF10000 
+              FFF11000 
+              FFF11100 
+              FFF11110 
+              FFF11111         DCD              0xFFF00000, 0xFFF10000, 0xFFF11
+000, 0xFFF11100, 0xFFF11110, 0xFFF11111
+   10 00000090         
+   11 00000090         
+   12 00000090 41 42 43 
+              44 45 46 Conversion
+                               DCB              "A", "B", "C", "D", "E", "F"
+   13 00000096 47 48 49 
+              4A 4B 4C         DCB              "G", "H", "I", "J", "K", "L"
+   14 0000009C 4D 4E 4F 
+              50 51 52         DCB              "M", "N", "O", "P", "Q", "R"
+   15 000000A2 53 54 55 
+              56 57 58         DCB              "S", "T", "U", "V", "W", "X"
+   16 000000A8 59 5A 31 
+              32 33 34         DCB              "Y", "Z", "1", "2", "3", "4"
+   17 000000AE 35 36 37 
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+              38 39 30         DCB              "5", "6", "7", "8", "9", "0"
+   18 000000B4         
+   19 000000B4                 AREA             asm_functions, CODE, READONLY
+   20 00000000                 EXPORT           translate_morse
+   21 00000000         
+   22 00000000         
+   23 00000000         ;translate_morse(
+   24 00000000         ;char* vett_input,   =R0
+   25 00000000         ;int vet_input_lenght,  =R1
+   26 00000000         ;char* vett_output,  =R2
+   27 00000000         ;int vet_output_lenght, =R3
+   28 00000000         ;char change_symbol,  SP
+   29 00000000         ;char space,    SP
+   30 00000000         ;char sentence_end); SP
+   31 00000000         translate_morse
+   32 00000000 46EC            MOV              R12, SP
+   33 00000002 E92D 5FFE       PUSH             {R1-R12, LR} 
+                                                            ; save R1-R12,LR,PC
+                                                            
+   34 00000006         
+   35 00000006 F85C 4B04       LDR              R4, [R12], #4 ;CHANGE
+   36 0000000A F85C 5B04       LDR              R5, [R12], #4 ;SPACE
+   37 0000000E F8DC 6000       LDR              R6, [R12]   ;END
+   38 00000012         
+   39 00000012         
+   40 00000012 F04F 37FF       MOV              R7,  #0xFFFFFFFF ; mask
+   41 00000016 F04F 0300       MOV              R3,  #0     ; counter
+   42 0000001A F04F 0800       MOV              R8,  #0     ; offset   
+   43 0000001E         loop
+   44 0000001E F810 9008       LDRB             R9, [R0, R8] ; R7 = input value
+                                                            
+   45 00000022         
+   46 00000022         ;  = 0
+   47 00000022 F1B9 0F00       CMP              R9, #0
+   48 00000026 D102            BNE              is_one
+   49 00000028 EA4F 1707       LSL              R7, #4
+   50 0000002C E020            B                check
+   51 0000002E         
+   52 0000002E         
+   53 0000002E         
+   54 0000002E         is_one                               ;  = 1
+   55 0000002E F1B9 0F01       CMP              R9, #1
+   56 00000032 D104            BNE              is_change
+   57 00000034 EA4F 1707       LSL              R7, #4
+   58 00000038 EA49 0707       ORR              R7, R9, R7
+   59 0000003C E018            B                check
+   60 0000003E         
+   61 0000003E         
+   62 0000003E         ; CHANGE = R4
+   63 0000003E 45A1    is_change
+                               CMP              R9, R4
+   64 00000040 D107            BNE              is_space
+   65 00000042 F7FF FFFE       BL               find_conversion
+   66 00000046 54D7            STRB             R7, [R2, R3]
+   67 00000048 F04F 37FF       MOV              R7,  #0xFFFFFFFF
+   68 0000004C F103 0301       ADD              R3, #1
+   69 00000050 E00E            B                check
+   70 00000052         
+   71 00000052         
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   72 00000052         is_space                             ; space = R5
+   73 00000052 45A9            CMP              R9, R5
+   74 00000054 D111            BNE              is_end
+   75 00000056 F7FF FFFE       BL               find_conversion
+   76 0000005A 54D7            STRB             R7, [R2, R3]
+   77 0000005C F103 0301       ADD              R3, #1
+   78 00000060         ; scrivo lo spazio
+   79 00000060 F04F 0720       MOV              R7, #0x20
+   80 00000064 54D7            STRB             R7, [R2, R3]
+   81 00000066 F04F 37FF       MOV              R7,  #0xFFFFFFFF
+   82 0000006A F103 0301       ADD              R3, #1
+   83 0000006E E7FF            B                check
+   84 00000070         
+   85 00000070         check
+   86 00000070 F108 0801       ADD              R8, r8, #1
+   87 00000074 4588            CMP              R8, R1
+   88 00000076 D014            BEQ              uscita
+   89 00000078 E7D1            B                loop
+   90 0000007A         
+   91 0000007A         is_end                               ; END = R6
+   92 0000007A F7FF FFFE       BL               find_conversion
+   93 0000007E 54D7            STRB             R7, [R2, R3]
+   94 00000080 F103 0301       ADD              R3, #1
+   95 00000084 E00D            B                uscita
+   96 00000086         
+   97 00000086         
+   98 00000086         
+   99 00000086         find_conversion
+                               PROC
+  100 00000086 E92D 5F7F       PUSH             {R0-R6, R8-R12, LR} ; save R0-R
+                                                            6, R8-R12, LR,PC
+  101 0000008A         
+  102 0000008A 4638            MOV              R0, R7      ;R0 è il valore 
+  103 0000008C         
+  104 0000008C 4906            LDR              R1, =Morse
+  105 0000008E 4A07            LDR              R2, =Conversion
+  106 00000090         
+  107 00000090         loop_conv
+  108 00000090 F851 3B04       LDR              R3, [R1], #4
+  109 00000094 F812 4B01       LDRB             R4, [R2], #1
+  110 00000098         
+  111 00000098 4298            CMP              R0, R3
+  112 0000009A D1F9            BNE              loop_conv
+  113 0000009C 4627            MOV              R7, R4
+  114 0000009E         
+  115 0000009E E8BD 9F7F       POP              {R0-R6, R8-R12, PC} ;restore R0
+                                                            -R6, R8-R12, LR,PC
+  116 000000A2         
+  117 000000A2                 ENDP
+  118 000000A2         
+  119 000000A2         
+  120 000000A2         uscita
+  121 000000A2 4618            MOV              R0, R3
+  122 000000A4 E8BD 9FFE       POP              {R1-R12, PC} ;restore R1-R12,LR
+                                                            ,PC
+  123 000000A8         
+  124 000000A8         
+  125 000000A8                 END
+              00000000 
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+              00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
+ork --depend=.\arm_func.d -o.\arm_func.o -I.\RTE\_Target_1 -IC:\Users\sofia\App
+Data\Local\Arm\Packs\ARM\CMSIS\5.8.0\CMSIS\Core\Include -IC:\Users\sofia\AppDat
+a\Local\Arm\Packs\Keil\LPC1700_DFP\2.7.1\Device\Include --predefine="__EVAL SET
+A 1" --predefine="__UVISION_VERSION SETA 536" --predefine="_RTE_ SETA 1" --pred
+efine="LPC175x_6x SETA 1" --predefine="_RTE_ SETA 1" --list=.\arm_func.lst butt
+on_EXINT\ARM_func.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+Conversion 00000090
+
+Symbol: Conversion
+   Definitions
+      At line 12 in file button_EXINT\ARM_func.s
+   Uses
+      At line 105 in file button_EXINT\ARM_func.s
+Comment: Conversion used once
+Morse 00000000
+
+Symbol: Morse
+   Definitions
+      At line 4 in file button_EXINT\ARM_func.s
+   Uses
+      At line 104 in file button_EXINT\ARM_func.s
+Comment: Morse used once
+morse 00000000
+
+Symbol: morse
+   Definitions
+      At line 1 in file button_EXINT\ARM_func.s
+   Uses
+      None
+Comment: morse unused
+3 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+asm_functions 00000000
+
+Symbol: asm_functions
+   Definitions
+      At line 19 in file button_EXINT\ARM_func.s
+   Uses
+      None
+Comment: asm_functions unused
+check 00000070
+
+Symbol: check
+   Definitions
+      At line 85 in file button_EXINT\ARM_func.s
+   Uses
+      At line 50 in file button_EXINT\ARM_func.s
+      At line 59 in file button_EXINT\ARM_func.s
+      At line 69 in file button_EXINT\ARM_func.s
+      At line 83 in file button_EXINT\ARM_func.s
+
+find_conversion 00000086
+
+Symbol: find_conversion
+   Definitions
+      At line 99 in file button_EXINT\ARM_func.s
+   Uses
+      At line 65 in file button_EXINT\ARM_func.s
+      At line 75 in file button_EXINT\ARM_func.s
+      At line 92 in file button_EXINT\ARM_func.s
+
+is_change 0000003E
+
+Symbol: is_change
+   Definitions
+      At line 63 in file button_EXINT\ARM_func.s
+   Uses
+      At line 56 in file button_EXINT\ARM_func.s
+Comment: is_change used once
+is_end 0000007A
+
+Symbol: is_end
+   Definitions
+      At line 91 in file button_EXINT\ARM_func.s
+   Uses
+      At line 74 in file button_EXINT\ARM_func.s
+Comment: is_end used once
+is_one 0000002E
+
+Symbol: is_one
+   Definitions
+      At line 54 in file button_EXINT\ARM_func.s
+   Uses
+      At line 48 in file button_EXINT\ARM_func.s
+Comment: is_one used once
+is_space 00000052
+
+Symbol: is_space
+   Definitions
+      At line 72 in file button_EXINT\ARM_func.s
+   Uses
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 64 in file button_EXINT\ARM_func.s
+Comment: is_space used once
+loop 0000001E
+
+Symbol: loop
+   Definitions
+      At line 43 in file button_EXINT\ARM_func.s
+   Uses
+      At line 89 in file button_EXINT\ARM_func.s
+Comment: loop used once
+loop_conv 00000090
+
+Symbol: loop_conv
+   Definitions
+      At line 107 in file button_EXINT\ARM_func.s
+   Uses
+      At line 112 in file button_EXINT\ARM_func.s
+Comment: loop_conv used once
+translate_morse 00000000
+
+Symbol: translate_morse
+   Definitions
+      At line 31 in file button_EXINT\ARM_func.s
+   Uses
+      At line 20 in file button_EXINT\ARM_func.s
+Comment: translate_morse used once
+uscita 000000A2
+
+Symbol: uscita
+   Definitions
+      At line 120 in file button_EXINT\ARM_func.s
+   Uses
+      At line 88 in file button_EXINT\ARM_func.s
+      At line 95 in file button_EXINT\ARM_func.s
+
+11 symbols
+350 symbols in table
